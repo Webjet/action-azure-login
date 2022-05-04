@@ -1,0 +1,27 @@
+name: 'Azure ACR Login'
+description: 'Azure ACR Login'
+
+
+inputs:
+  env-json-base64:
+    description: 'base64 json'
+    required: true
+
+
+runs:
+  using: "composite"
+  steps: 
+
+    - name: Acr login
+      run: |
+        data=$(echo ${{ inputs.env-json-base64 }} | base64 --decode)
+        CONTAINERREGISTRY=$(echo $data | jq -r '.REGISTRY')
+        CLIENTID=$(echo $data | jq -r '.CLIENTID')
+        CLIENTSECRET=$(echo $data | jq -r '.CLIENTSECRET')
+        TENANT=$(echo $data | jq -r '.TENANT')
+
+        az login --service-principal -u $CLIENTID -p $CLIENTSECRET --tenant $TENANT
+        az acr login -n $CONTAINERREGISTRY
+        echo "ACR login successfully!"
+      shell: bash
+
